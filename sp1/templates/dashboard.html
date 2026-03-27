@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SP1 - Dashboard</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; }
+    .admin-panel { background: #fffbe6; border: 1px solid #f0c040;
+                   padding: 16px; border-radius: 8px; margin: 16px 0; }
+    .user-panel  { background: #e6f7ff; border: 1px solid #91d5ff;
+                   padding: 16px; border-radius: 8px; margin: 16px 0; }
+    .btn { padding: 8px 16px; background: #1D9E75; color: white;
+           border: none; border-radius: 6px; cursor: pointer; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard - App 1</h1>
+  <p>Username: <strong>{{ user.preferred_username }}</strong></p>
+  <p>Email: {{ user.email }}</p>
+
+  {% set roles = user.get('realm_access', {}).get('roles', []) %}
+
+  {% if 'admin' in roles %}
+    <div class="admin-panel">
+      <h3>Admin Panel</h3>
+      <p>You have admin access. You can see this secret admin content.</p>
+    </div>
+  {% else %}
+    <div class="user-panel">
+      <h3>User Panel</h3>
+      <p>You are a regular user. No admin content for you!</p>
+    </div>
+  {% endif %}
+
+  <a href="http://localhost:5002/" class="btn">Go to App 2 (test SSO)</a>
+  <a href="/logout">Logout</a>
+</body>
+</html>
