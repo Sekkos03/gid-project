@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SP1 - App One</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; }
+    .btn { padding: 10px 20px; background: #1D9E75; color: white;
+           border: none; border-radius: 6px; cursor: pointer; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>App 1 - Service Provider 1</h1>
+  {% if user %}
+    <p>Logged in as: <strong>{{ user.preferred_username }}</strong></p>
+    <a href="/dashboard" class="btn">Go to Dashboard</a>
+    <a href="/logout">Logout</a>
+  {% else %}
+    <p>You are not logged in.</p>
+    <a href="/login" class="btn">Login with SSO</a>
+  {% endif %}
+</body>
+</html>
