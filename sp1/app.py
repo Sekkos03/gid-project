@@ -21,6 +21,11 @@ keycloak = oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
+# ---- MITIGATION A-01: jti replay store (comment out to re-enable vulnerability) ----
+used_jtis = set()
+# ------------------------------------------------------------------------------------
+
+
 @app.route('/')
 def home():
     return render_template('home.html', user=session.get('user'))
@@ -60,11 +65,36 @@ def vulnerable_login():
         return "No token provided", 400
     try:
         import jwt as pyjwt
+        import requests as pyrequests
+
         decoded = pyjwt.decode(
             token,
             options={"verify_signature": False,
                      "verify_exp": False},
         )
+                # ---- MITIGATION A-01: jti replay check (comment out block to re-enable vulnerability) ----
+        jti = decoded.get('jti')
+        if not jti:
+            return "Token has no jti claim — rejected", 403
+        if jti in used_jtis:
+            return "Token already used — replay attack detected", 403
+        used_jtis.add(jti) 
+        # ---- MITIGATION A-01: token introspection (comment out block to re-enable vulnerability) ----
+        introspect_url = (
+            f"{os.getenv('KEYCLOAK_URL')}/realms/{os.getenv('REALM')}"
+            "/protocol/openid-connect/token/introspect"
+        )
+        introspect_resp = pyrequests.post(introspect_url, data={
+            'token': token,
+            'client_id': os.getenv('SP1_CLIENT_ID'),
+            'client_secret': os.getenv('SP1_CLIENT_SECRET'),
+        })
+        introspect_data = introspect_resp.json()
+        if not introspect_data.get('active', False):
+            return "Token is no longer active (session ended or expired) — rejected", 403
+        # ---- END MITIGATION ----
+        # -------------------------------------------------------------------------------------------
+
         session['user'] = decoded
         return f"Logged in as {decoded.get('preferred_username')} (REPLAYED!)"
     except Exception as e:
@@ -91,6 +121,15 @@ def vulnerable_jwt():
 
     header = pyjwt.get_unverified_header(token)
     alg = header.get('alg', 'RS256')
+
+    # ---- MITIGATION A-02: algorithm allowlist (comment out block to re-enable vulnerability) ----
+    ALLOWED_ALGORITHMS = {'RS256'}
+    if alg not in ALLOWED_ALGORITHMS:
+        return (
+            f"Token rejected: algorithm '{alg}' is not permitted. "
+            f"Only {ALLOWED_ALGORITHMS} are accepted."
+        ), 401
+    # ---- END MITIGATION A-02 ----
 
     try:
         with open(pem_path, 'rb') as f:
@@ -138,6 +177,7 @@ def vulnerable_jwt():
             from cryptography.hazmat.primitives.serialization import load_pem_public_key
             from cryptography.hazmat.backends import default_backend
             key = load_pem_public_key(pem_data, backend=default_backend())
+
             decoded = pyjwt.decode(
                 token, key,
                 algorithms=['RS256'],
@@ -150,5 +190,4 @@ def vulnerable_jwt():
         return f"Token rejected: {e}", 401
 if __name__ == '__main__':
     app.run(port=5001, debug=True)
-
 
