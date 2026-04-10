@@ -17,7 +17,6 @@
 7. [Attack Scripts](#7-attack-scripts)
    - [A-01 Replay Attack](#a-01-replay-attack)
    - [A-05 JWT Algorithm Confusion](#a-05-jwt-algorithm-confusion)
-   - [A-08 Audience Confusion](#a-08-audience-confusion)
 8. [Running Mitigations](#8-running-mitigations)
 9. [Troubleshooting](#9-troubleshooting)
 
@@ -36,7 +35,6 @@ This project implements a Federated Identity Management (FIM) system following t
 **Assigned attacks:**
 - `A-01` — Replay Attack on Authentication Token
 - `A-05` — JWT Algorithm Confusion (RS256 → HS256)
-- `A-08` — Insufficient Audience Validation at SP
 
 ---
 
