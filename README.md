@@ -1,5 +1,5 @@
 # GID — Digital Identity Management
-## Practical Assignment 2025/2026 | Group 1
+## Practical Assignment 2025/2026 | Group 7
 
 > **Master in Cybersecurity | Instituto Politécnico de Viana do Castelo**
 > Protocol: OAuth 2.0 / OpenID Connect | IdP: Keycloak 24.5.6
@@ -321,4 +321,4 @@ Replay each attack using the secure URL to demonstrate the mitigation works.
 
 ---
 
-*Group 1 | GID 2025/2026 | Instituto Politécnico de Viana do Castelo*
+*Group 7 | GID 2025/2026 | Instituto Politécnico de Viana do Castelo*
