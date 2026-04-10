@@ -1,7 +1,7 @@
 # GID — Digital Identity Management
 ## Practical Assignment 2025/2026 | Group 1
 
-> **Mestrado em Cibersegurança | Instituto Politécnico de Viana do Castelo**
+> **Master in Cybersecurity | Instituto Politécnico de Viana do Castelo**
 > Protocol: OAuth 2.0 / OpenID Connect | IdP: Keycloak 24.5.6
 
 ---
@@ -66,21 +66,14 @@ git clone https://github.com/Sekkos03/gid-project.git
 cd gid-project
 ```
 
-### Step 2 — Install Python dependencies
-
-```bash
-pip install -r sp1/requirements.txt
-pip install -r sp2/requirements.txt
-```
-
-### Step 3 — Download and extract Keycloak
+### Step 2 — Download and extract Keycloak
 
 ```bash
 # Download from https://www.keycloak.org/downloads
 # Extract to a folder e.g. ~/keycloak or C:\keycloak
 ```
 
-### Step 4 — Configure environment variables
+### Step 3 — Configure environment variables
 
 Copy the example env file and fill in your Keycloak client secrets:
 
@@ -103,7 +96,7 @@ SP2_CLIENT_SECRET=PASTE_YOUR_SP2_SECRET_HERE
 
 > **Where to find the client secrets:** Keycloak Admin → Clients → sp1-app → Credentials tab → copy Client Secret
 
-### Step 5 — Configure Keycloak
+### Step 4 — Configure Keycloak
 
 Start Keycloak (see Section 4), then complete this setup in the admin console at `http://localhost:8080/admin`:
 
@@ -129,11 +122,11 @@ Open **three separate terminals** and run each command:
 
 ```bash
 # Linux / macOS
-cd ~/keycloak
+cd ~/gid-project/keycloak/keycloak-26.5.6
 bin/kc.sh start-dev
 
 # Windows
-cd C:\keycloak
+cd C:\gid-project\keycloak\keycloak-26.5.6
 bin\kc.bat start-dev
 ```
 
@@ -160,7 +153,7 @@ SP2 available at: **http://localhost:5002**
 ### Verify SSO is working
 
 1. Go to `http://localhost:5001` → click **Login with SSO**
-2. Log in as `alice / alice123`
+2. Log in as `sekou / sekou123`
 3. You should see the Admin Panel (role-based content)
 4. Click **Go to App 2** → you should be logged in automatically (no login prompt)
 5. That confirms SSO is working ✓
@@ -179,30 +172,26 @@ SP2 available at: **http://localhost:5002**
 ## 6. Project Structure
 
 ```
-gid-sso/
+gid-project/
+│
+├── keycloak/
+│   └── keycloak-26.5.6/
 │
 ├── sp1/
-│   ├── app.py                  # SP1 Flask application (includes vulnerable routes)
-│   ├
+│   ├── app.py                  # SP1 Flask application
 │   └── templates/
-│       ├── home.html
-│       └── dashboard.html
 │
 ├── sp2/
-│   ├── app.py                  # SP2 Flask application (includes vulnerable routes)
-│   ├
+│   ├── app.py                  # SP2 Flask application
 │   └── templates/
 │       ├── home.html
 │       └── dashboard.html
 │
-├── attacks/
-│   ├── get_pubkey.py           # Fetches Keycloak public key (used in A-05)
-│   ├── forge_token.py          # Forges JWT with HS256 (A-05 attack script)
-│   └── replay_demo.py          # Demonstrates token replay (A-01 helper)
-│
-├── .env.example                # Environment variable template
-├── .env                        # Your local config (never commit this!)
-├── .gitignore
+├── forge_token.py              # Forges JWT with HS256 (A-05 attack script)
+├── get_pubkey.py               # Fetches Keycloak public key (used in A-05)
+├── keycloak_pub.pem
+├── .env
+├── .gitattributes
 └── README.md
 ```
 
@@ -224,7 +213,7 @@ Make sure `sp1/app.py` contains the `/vulnerable-login` route (already included)
 
 #### Step 2 — Get a token
 
-Start all services, log in as alice on SP1, then visit:
+Start all services, log in as sekou on SP1, then visit:
 
 ```
 http://localhost:5001/show-token
@@ -244,7 +233,7 @@ Paste the token into this URL and open it in a fresh browser window:
 http://localhost:5001/vulnerable-login?token=PASTE_TOKEN_HERE
 ```
 
-**Expected result:** `Logged in as alice (REPLAYED!)` — attack successful ✓
+**Expected result:** `Logged in as sekou (REPLAYED!)` — attack successful ✓
 
 #### Step 5 — Capture evidence
 
@@ -307,53 +296,6 @@ Copy the Attack URL from the output and open it in your browser.
 
 ---
 
-### A-08 Audience Confusion
-
-**What it does:** Uses a token issued for SP1 to authenticate at SP2, which doesn't check the `aud` field.
-
-#### Step 1 — Get SP1's token
-
-Log in as alice on SP1, then visit:
-
-```
-http://localhost:5001/show-token
-```
-
-Copy the token.
-
-#### Step 2 — Verify the audience
-
-Go to **https://jwt.io** and paste the token. In the payload section confirm you see:
-
-```json
-"aud": "sp1-app"
-```
-
-Take a screenshot — this is your primary evidence.
-
-#### Step 3 — Submit SP1 token to SP2
-
-```
-http://localhost:5002/vulnerable-audience?token=PASTE_SP1_TOKEN_HERE
-```
-
-**Expected result:** SP2 accepts the token and displays:
-
-```
-SP2 accepted token!
-User: alice
-Token was intended for: sp1-app
-But SP2 never checked — ATTACK SUCCESS!
-```
-
-#### Step 4 — Capture evidence
-
-- Screenshot of `jwt.io` showing `aud: sp1-app`
-- Screenshot of SP2's response confirming acceptance despite wrong audience
-- Screenshot of SP2's normal homepage for comparison
-
----
-
 ## 8. Running Mitigations
 
 Each attack has a corresponding secured endpoint. After demonstrating each attack, show it is blocked:
@@ -362,7 +304,6 @@ Each attack has a corresponding secured endpoint. After demonstrating each attac
 |--------|-----------------|--------------|-------------------------------|
 | A-01 | `/vulnerable-login` | `/secure-login` | `403 Token already used` |
 | A-05 | `/vulnerable-jwt` | `/secure-jwt` | `403 Algorithm not allowed` |
-| A-08 | `/vulnerable-audience` | `/secure-audience` | `403 Token audience is sp1-app, expected sp2-app` |
 
 Replay each attack using the secure URL to demonstrate the mitigation works.
 
