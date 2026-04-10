@@ -72,14 +72,15 @@ def vulnerable_login():
             options={"verify_signature": False,
                      "verify_exp": False},
         )
-                # ---- MITIGATION A-01: jti replay check (comment out block to re-enable vulnerability) ----
+        
+                # ---- MITIGATION A-01: jti replay check ----
         jti = decoded.get('jti')
         if not jti:
             return "Token has no jti claim — rejected", 403
         if jti in used_jtis:
             return "Token already used — replay attack detected", 403
         used_jtis.add(jti) 
-        # ---- MITIGATION A-01: token introspection (comment out block to re-enable vulnerability) ----
+        # ---- MITIGATION A-01: token introspection ----
         introspect_url = (
             f"{os.getenv('KEYCLOAK_URL')}/realms/{os.getenv('REALM')}"
             "/protocol/openid-connect/token/introspect"
@@ -94,7 +95,7 @@ def vulnerable_login():
             return "Token is no longer active (session ended or expired) — rejected", 403
         # ---- END MITIGATION ----
         # -------------------------------------------------------------------------------------------
-
+        
         session['user'] = decoded
         return f"Logged in as {decoded.get('preferred_username')} (REPLAYED!)"
     except Exception as e:
@@ -121,8 +122,8 @@ def vulnerable_jwt():
 
     header = pyjwt.get_unverified_header(token)
     alg = header.get('alg', 'RS256')
-
-    # ---- MITIGATION A-02: algorithm allowlist (comment out block to re-enable vulnerability) ----
+    
+    # ---- MITIGATION A-02: algorithm allowlist ----
     ALLOWED_ALGORITHMS = {'RS256'}
     if alg not in ALLOWED_ALGORITHMS:
         return (
@@ -130,7 +131,7 @@ def vulnerable_jwt():
             f"Only {ALLOWED_ALGORITHMS} are accepted."
         ), 401
     # ---- END MITIGATION A-02 ----
-
+    
     try:
         with open(pem_path, 'rb') as f:
             pem_data = f.read()
